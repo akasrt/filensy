@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"log"
-	"sync"
 
 	"github.com/akasrt/filensy/internal/config/env"
 	"github.com/jmoiron/sqlx"
@@ -13,7 +12,6 @@ import (
 )
 
 var db *sqlx.DB
-var once sync.Once
 
 func InitDB() {
 	var err error
@@ -23,6 +21,8 @@ func InitDB() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	migrate(db.DB)
 }
 
 func GetDB() *sqlx.DB {
