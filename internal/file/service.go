@@ -12,6 +12,11 @@ import (
 	"github.com/rs/xid"
 )
 
+const (
+	visibilityPublic  = "public"
+	visibilityPrivate = "private"
+)
+
 type Service interface {
 	GetMetaData(code, token string) (RSFileData, error)
 	Upload(rq RQFileData) (RSFileData, error)
@@ -39,9 +44,11 @@ func (s *service) GetMetaData(code, token string) (RSFileData, error) {
 		return RSFileData{}, err
 	}
 
-	isValidToken := cryptox.VerifyToken(token, fileData.Token)
-	if !isValidToken {
-		return RSFileData{}, errorx.NewUnauthorizedError(nil)
+	if fileData.Visibility == visibilityPrivate {
+		isValidToken := cryptox.VerifyToken(token, fileData.Token)
+		if !isValidToken {
+			return RSFileData{}, errorx.NewUnauthorizedError(nil)
+		}
 	}
 
 	return fileData.MapToResponse(nil), nil
@@ -66,13 +73,15 @@ func (s *service) Upload(rq RQFileData) (RSFileData, error) {
 	}
 
 	fileData := FileData{
-		ID:         xid.New().String(),
-		Token:      tokenHash,
-		Name:       rq.Name,
-		StorageKey: storageKey,
-		Size:       size,
-		CreatedAt:  now,
-		ExpiresAt:  expiresAt,
+		ID:           xid.New().String(),
+		Token:        tokenHash,
+		Name:         rq.Name,
+		StorageKey:   storageKey,
+		Size:         size,
+		Visibility:   rq.Visibility,
+		Is_Encrypted: rq.Is_Encrypted,
+		CreatedAt:    now,
+		ExpiresAt:    expiresAt,
 	}
 
 	var savedData FileData
@@ -115,9 +124,12 @@ func (s *service) Download(code, token string) (*os.File, RSFileData, error) {
 		return nil, RSFileData{}, errorx.NewUnauthorizedError(nil)
 	}
 
-	file, err := s.fileStore.Get(fileData.StorageKey)
-	if err != nil {
-		return nil, RSFileData{}, err
+	var file *os.File
+	if fileData.Visibility == visibilityPrivate {
+		file, err = s.fileStore.Get(fileData.StorageKey)
+		if err != nil {
+			return nil, RSFileData{}, err
+		}
 	}
 
 	return file, fileData.MapToResponse(nil), nil

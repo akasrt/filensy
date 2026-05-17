@@ -5,6 +5,8 @@ CREATE TABLE IF NOT EXISTS files (
     token        CHAR(64) NOT NULL,
     name         VARCHAR(255) NOT NULL,
     storage_key  TEXT NOT NULL,
+    visibility    ENUM('private', 'public') NOT NULL DEFAULT 'private',
+    is_encrypted  BOOLEAN NOT NULL DEFAULT FALSE,
     size         BIGINT UNSIGNED NOT NULL,
     created_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     expires_at   TIMESTAMP NULL DEFAULT NULL,

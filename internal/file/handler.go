@@ -1,7 +1,6 @@
 package file
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -111,20 +110,9 @@ func parseRequest(c *echo.Context) (string, string, error) {
 		return "", "", errorx.New(http.StatusBadRequest, "missing code in param")
 	}
 
-	token, err := getTokenFromHeader(c)
-	if err != nil {
-		return "", "", err
-	}
+	token := c.Request().Header.Get("X-File-Token")
 
 	return code, token, nil
-}
-
-func getTokenFromHeader(c *echo.Context) (string, error) {
-	token := c.Request().Header.Get("X-File-Token")
-	if token == "" {
-		return "", errorx.Wrap(errors.New("missing token in header"), http.StatusUnauthorized, "")
-	}
-	return token, nil
 }
 
 func parseTTL(c *echo.Context) (time.Duration, error) {
@@ -154,6 +142,15 @@ func parseTTL(c *echo.Context) (time.Duration, error) {
 
 func setFileHeaders(c *echo.Context, metaData RSFileData) {
 	c.Response().Header().Set("X-File-Name", metaData.Name)
-	c.Response().Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, "enc_"+metaData.Name+".bin"))
+	c.Response().Header().Set("X-Is-Encrypted", fmt.Sprint(metaData.Is_Encrypted))
+
+	var fileName string
+	if metaData.Is_Encrypted {
+		fileName = "enc_" + metaData.Name + ".bin"
+	} else {
+		fileName = metaData.Name
+	}
+	c.Response().Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, fileName))
+
 	c.Response().Header().Set("Content-Length", strconv.FormatUint(metaData.Size, 10))
 }
