@@ -9,12 +9,11 @@ import (
 
 const (
 	// a list of env key constants
-	DSN         = "DSN"
-	ServerPort  = "SERVER_PORT"
-	FileRoot    = "FILE_ROOT"
-	AuthKey     = "AUTH_KEY"
-	LogLevel    = "LOG_LEVEL"
-	FileCodeKey = "FILE_CODE_KEY"
+	DSN        = "DSN"
+	ServerPort = "SERVER_PORT"
+	FileRoot   = "FILE_ROOT"
+	AuthKey    = "AUTH_KEY"
+	LogLevel   = "LOG_LEVEL"
 )
 
 func GetEnv(key string) string {

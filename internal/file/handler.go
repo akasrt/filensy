@@ -57,8 +57,14 @@ func (h *handler) Upload(c *echo.Context) error {
 	}
 
 	fileData.Name = c.QueryParam("name")
+	encStr, err := strconv.ParseBool(c.QueryParam("enc"))
+	if err != nil {
+		return errorx.Wrap(err, 400, "invalid query param")
+	}
+	fileData.Is_Encrypted = encStr
 	fileData.TTL = ttl
 	fileData.Reader = c.Request().Body
+	c.Validate(fileData)
 
 	fd, err := h.service.Upload(fileData)
 	if err != nil {

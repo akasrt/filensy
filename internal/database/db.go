@@ -19,6 +19,7 @@ func InitDB() {
 	dsn := env.GetEnv(env.DSN)
 	db, err = sqlx.Connect("mysql", dsn)
 	if err != nil {
+		log.Println("unable to connect to mysql database")
 		log.Fatal(err)
 	}
 
