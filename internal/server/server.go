@@ -11,6 +11,7 @@ import (
 	"github.com/akasrt/filensy/internal/database"
 	"github.com/akasrt/filensy/internal/middlewarex"
 	"github.com/akasrt/filensy/internal/router"
+	"github.com/akasrt/filensy/internal/util/errorx"
 	"github.com/akasrt/filensy/internal/util/loggerx"
 	"github.com/akasrt/filensy/internal/util/validate"
 	"github.com/labstack/echo/v5"
@@ -23,6 +24,7 @@ func Start() {
 	e.Use(middleware.RequestID())
 	e.Use(middlewarex.LoggerMiddleware())
 	e.Validator = validate.NewValidator()
+	e.HTTPErrorHandler = errorx.ErrorHandler()
 	router.AddRoutes(e)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

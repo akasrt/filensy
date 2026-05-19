@@ -23,7 +23,11 @@ func InitDB() {
 		log.Fatal(err)
 	}
 
-	migrate(db.DB)
+	err = migrate(db.DB)
+	if err != nil {
+		log.Println("migration failed")
+		log.Fatal(err)
+	}
 }
 
 func GetDB() *sqlx.DB {
@@ -35,7 +39,7 @@ func migrate(db *sql.DB) error {
 		return err
 	}
 
-	return goose.Up(db, "../migrations")
+	return goose.Up(db, "./internal/migrations")
 }
 
 func Close() {

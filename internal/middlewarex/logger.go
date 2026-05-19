@@ -27,6 +27,10 @@ func LoggerMiddleware() echo.MiddlewareFunc {
 					"ip", v.RemoteIP,
 				}
 
+				if v.Error != nil {
+					args = append(args, "error", v.Error.Error())
+				}
+
 				switch {
 				case v.Status >= 500:
 					log.Error("http request", args...)

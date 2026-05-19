@@ -1,10 +1,10 @@
 -- +goose Up
 CREATE TABLE IF NOT EXISTS files (
-    id  BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id           VARCHAR(36) PRIMARY KEY,
     code         VARCHAR(8) NOT NULL,
     token        CHAR(64) NOT NULL,
     name         VARCHAR(255) NOT NULL,
-    storage_key  TEXT NOT NULL,
+    storage_key  VARCHAR(255) NOT NULL,
     visibility    ENUM('private', 'public') NOT NULL DEFAULT 'private',
     is_encrypted  BOOLEAN NOT NULL DEFAULT FALSE,
     size         BIGINT UNSIGNED NOT NULL,
