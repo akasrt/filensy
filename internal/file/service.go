@@ -1,11 +1,9 @@
 package file
 
 import (
-	"log"
 	"os"
 	"time"
 
-	"github.com/akasrt/filensy/internal/config/env"
 	"github.com/akasrt/filensy/internal/cryptox"
 	"github.com/akasrt/filensy/internal/filestore"
 	"github.com/akasrt/filensy/internal/util/errorx"
@@ -25,7 +23,7 @@ type Service interface {
 }
 
 func NewService() Service {
-	fs := filestore.NewFileStore(env.GetEnv(env.FileRoot))
+	fs := filestore.Get()
 
 	return &service{
 		storage:   NewStorage(),
@@ -94,22 +92,20 @@ func (s *service) Upload(rq RQFileData) (RSFileData, error) {
 		fileData.Code = code
 
 		savedData, err = s.storage.Create(fileData)
-		if err != nil {
-			if s.storage.IsDuplicateErr(err) {
-				continue
-			} else {
-				s.fileStore.Delete(storageKey)
-				return RSFileData{}, err
-			}
+		if err == nil {
+			break
+		}
+
+		if !s.storage.IsDuplicateErr(err) {
+			s.fileStore.Delete(storageKey)
+			return RSFileData{}, err
 		}
 
 		if i == maxRetries {
-			log.Println("Max retries reached file insert")
 			s.fileStore.Delete(storageKey)
 			return RSFileData{}, errorx.NewInternalServerError(nil)
 		}
 	}
-
 	return savedData.MapToResponse(&token), nil
 }
 
@@ -119,17 +115,16 @@ func (s *service) Download(code, token string) (*os.File, RSFileData, error) {
 		return nil, RSFileData{}, err
 	}
 
-	isValidToken := cryptox.VerifyToken(token, fileData.Token)
-	if !isValidToken {
-		return nil, RSFileData{}, errorx.NewUnauthorizedError(nil)
+	if fileData.Visibility == visibilityPrivate {
+		isValidToken := cryptox.VerifyToken(token, fileData.Token)
+		if !isValidToken {
+			return nil, RSFileData{}, errorx.NewUnauthorizedError(nil)
+		}
 	}
 
-	var file *os.File
-	if fileData.Visibility == visibilityPrivate {
-		file, err = s.fileStore.Get(fileData.StorageKey)
-		if err != nil {
-			return nil, RSFileData{}, err
-		}
+	file, err := s.fileStore.Get(fileData.StorageKey)
+	if err != nil {
+		return nil, RSFileData{}, err
 	}
 
 	return file, fileData.MapToResponse(nil), nil

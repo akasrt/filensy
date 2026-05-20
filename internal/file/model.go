@@ -11,9 +11,9 @@ type FileData struct {
 	Token        string    `db:"token"`
 	Name         string    `db:"name"`
 	StorageKey   string    `db:"storage_key"`
+	Visibility   string    `db:"visibility"`
+	Is_Encrypted bool      `db:"is_encrypted"`
 	Size         uint64    `db:"size"`
-	Is_Encrypted bool      `json:"is_encrypted"`
-	Visibility   string    `validate:"required"`
 	CreatedAt    time.Time `db:"created_at"`
 	ExpiresAt    time.Time `db:"expires_at"`
 }
@@ -21,7 +21,7 @@ type FileData struct {
 type RQFileData struct {
 	Name         string        `validate:"required,min=1,max=255"`
 	TTL          time.Duration `validate:"omitempty"`
-	Visibility   string        `validate:"required"`
+	Visibility   string        `validate:"required,oneof=private public"`
 	Is_Encrypted bool          `validate:"omitempty"`
 	Reader       io.Reader     `validate:"required"`
 }

@@ -9,15 +9,23 @@ import (
 
 func ErrorHandler() echo.HTTPErrorHandler {
 	return func(c *echo.Context, err error) {
+		var sc echo.HTTPStatusCoder
+		if errors.As(err, &sc) {
+			statusNotFound := 404
+			if sc.StatusCode() == statusNotFound {
+				c.JSON(statusNotFound, NewNotFoundError().Response("resource not found"))
+				return
+			}
+		}
 		var appErr *Error
 		if errors.As(err, &appErr) {
 			resp := appErr.Response("")
-			_ = c.JSON(appErr.Code, resp)
+			c.JSON(appErr.Code, resp)
 		} else {
 			log := loggerx.Get()
 			log.Error("unknown error", "error", err.Error())
 			resp := NewInternalServerError(err).Response("something unexpected happened")
-			_ = c.JSON(500, resp)
+			c.JSON(500, resp)
 		}
 	}
 }

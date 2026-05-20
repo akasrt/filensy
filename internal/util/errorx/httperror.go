@@ -31,3 +31,10 @@ func NewUnauthorizedError(err error) *Error {
 		Err:     err,
 	}
 }
+
+func NewNotFoundError() *Error {
+	return &Error{
+		Code:    404,
+		Message: "not found",
+	}
+}

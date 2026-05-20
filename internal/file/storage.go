@@ -2,6 +2,7 @@ package file
 
 import (
 	"errors"
+	"time"
 
 	"github.com/akasrt/filensy/internal/database"
 	"github.com/go-sql-driver/mysql"
@@ -42,7 +43,7 @@ func (s *storage) Create(rqData FileData) (FileData, error) {
 func (s *storage) Get(code string) (FileData, error) {
 	var data FileData
 	query := getFileQuery()
-	err := s.db.Get(&data, query, code)
+	err := s.db.Get(&data, query, code, time.Now())
 	if err != nil {
 		return FileData{}, err
 	}

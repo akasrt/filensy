@@ -63,6 +63,13 @@ func (h *handler) Upload(c *echo.Context) error {
 	}
 	fileData.Is_Encrypted = encStr
 	fileData.TTL = ttl
+	visibility := c.QueryParam("visibility")
+	if visibility == "" {
+		fileData.Visibility = visibilityPrivate
+	} else {
+		fileData.Visibility = visibility
+	}
+
 	fileData.Reader = c.Request().Body
 	c.Validate(fileData)
 

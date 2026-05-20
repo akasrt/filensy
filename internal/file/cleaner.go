@@ -4,6 +4,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/akasrt/filensy/internal/database"
+	"github.com/akasrt/filensy/internal/filestore"
 	"github.com/jmoiron/sqlx"
 )
 
@@ -12,18 +14,26 @@ const (
 	batchSize = 100
 )
 
-func (s *storage) RunCleaner() {
+func RunCleaner() {
+	db := database.GetDB()
+	fileStore := filestore.Get()
 	go func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
-
-		clean(s.db)
+		clean(db, fileStore)
 	}()
 }
 
-func clean(db *sqlx.DB) {
+func clean(db *sqlx.DB, fileStore filestore.FileStore) {
 	for {
-		res, err := db.Exec(deleteExpiredQuery(), batchSize)
+		now := time.Now()
+		var storageKeys []string
+		err := db.Select(&storageKeys, getExpiredStorageKeys(), now, batchSize)
+		if err != nil {
+			log.Print(err)
+		}
+
+		res, err := db.Exec(deleteExpiredQuery(), now, batchSize)
 		if err != nil {
 			log.Print(err)
 			return
@@ -35,8 +45,16 @@ func clean(db *sqlx.DB) {
 			return
 		}
 
+		for _, key := range storageKeys {
+			err = fileStore.Delete(key)
+			if err != nil {
+				log.Print(err)
+			}
+		}
+
 		if rows == 0 {
 			return
 		}
+
 	}
 }

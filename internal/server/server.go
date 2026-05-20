@@ -9,6 +9,8 @@ import (
 
 	"github.com/akasrt/filensy/internal/config/env"
 	"github.com/akasrt/filensy/internal/database"
+	"github.com/akasrt/filensy/internal/file"
+	"github.com/akasrt/filensy/internal/filestore"
 	"github.com/akasrt/filensy/internal/middlewarex"
 	"github.com/akasrt/filensy/internal/router"
 	"github.com/akasrt/filensy/internal/util/errorx"
@@ -30,7 +32,7 @@ func Start() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	address := ":" + env.GetEnv(env.ServerPort)
+	address := env.GetEnv(env.ServerAddress)
 	sc := echo.StartConfig{
 		Address:         address,
 		GracefulTimeout: 10 * time.Second,
@@ -47,6 +49,8 @@ func initDependencies() {
 	env.LoadEnv()
 	loggerx.Init()
 	database.InitDB()
+	filestore.InitFileStore(env.GetEnv(env.FileRoot))
+	file.RunCleaner()
 }
 
 func cleanUp(err error) {

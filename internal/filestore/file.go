@@ -11,22 +11,28 @@ import (
 
 const dirName = "vault"
 
+var store fileStore
+
 type FileStore interface {
 	Save(src io.Reader) (string, uint64, error)
 	Get(name string) (*os.File, error)
 	Delete(name string) error
 }
 
-func NewFileStore(root string) FileStore {
+func InitFileStore(root string) {
 	dir := filepath.Join(root, dirName)
 	err := os.MkdirAll(dir, 0755)
 	if err != nil {
 		log.Panic("failed to init file directory: ", err)
 	}
 
-	return &fileStore{
+	store = fileStore{
 		dir: dir,
 	}
+}
+
+func Get() FileStore {
+	return &store
 }
 
 type fileStore struct {
