@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/akasrt/filensy/internal/database"
+	"github.com/akasrt/filensy/internal/util/errorx"
 	"github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 )
@@ -30,7 +31,7 @@ func (s *storage) Create(rqData FileData) (FileData, error) {
 	query := createFileQuery()
 	_, err := s.db.NamedExec(query, rqData)
 	if err != nil {
-		return FileData{}, err
+		return FileData{}, errorx.WrapMysqlError(err)
 	}
 
 	data, err := s.Get(rqData.Code)
@@ -45,7 +46,7 @@ func (s *storage) Get(code string) (FileData, error) {
 	query := getFileQuery()
 	err := s.db.Get(&data, query, code, time.Now())
 	if err != nil {
-		return FileData{}, err
+		return FileData{}, errorx.WrapMysqlError(err)
 	}
 
 	return data, nil
@@ -55,7 +56,7 @@ func (s *storage) Delete(code string) error {
 	query := deleteFileQuery()
 	_, err := s.db.Exec(query, code)
 	if err != nil {
-		return err
+		return errorx.WrapMysqlError(err)
 	}
 
 	return nil

@@ -45,7 +45,7 @@ func (s *service) GetMetaData(code, token string) (RSFileData, error) {
 	if fileData.Visibility == visibilityPrivate {
 		isValidToken := cryptox.VerifyToken(token, fileData.Token)
 		if !isValidToken {
-			return RSFileData{}, errorx.NewUnauthorizedError(nil)
+			return RSFileData{}, errorx.WrapUnauthorizedError(nil)
 		}
 	}
 
@@ -103,7 +103,7 @@ func (s *service) Upload(rq RQFileData) (RSFileData, error) {
 
 		if i == maxRetries {
 			s.fileStore.Delete(storageKey)
-			return RSFileData{}, errorx.NewInternalServerError(nil)
+			return RSFileData{}, errorx.WrapInternalServerError(nil)
 		}
 	}
 	return savedData.MapToResponse(&token), nil
@@ -118,13 +118,13 @@ func (s *service) Download(code, token string) (*os.File, RSFileData, error) {
 	if fileData.Visibility == visibilityPrivate {
 		isValidToken := cryptox.VerifyToken(token, fileData.Token)
 		if !isValidToken {
-			return nil, RSFileData{}, errorx.NewUnauthorizedError(nil)
+			return nil, RSFileData{}, errorx.WrapUnauthorizedError(nil)
 		}
 	}
 
 	file, err := s.fileStore.Get(fileData.StorageKey)
 	if err != nil {
-		return nil, RSFileData{}, err
+		return nil, RSFileData{}, errorx.WrapInternalServerError(err)
 	}
 
 	return file, fileData.MapToResponse(nil), nil
@@ -138,7 +138,7 @@ func (s *service) Delete(code, token string) error {
 
 	isValidToken := cryptox.VerifyToken(token, fileData.Token)
 	if !isValidToken {
-		return errorx.NewUnauthorizedError(nil)
+		return errorx.WrapUnauthorizedError(nil)
 	}
 
 	err = s.storage.Delete(code)

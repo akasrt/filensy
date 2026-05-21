@@ -43,6 +43,6 @@ func Wrap(err error, code int, message string) *Error {
 func (e *Error) Response(message string) httputil.Response {
 	return httputil.NewErrorResponse(message, &httputil.Error{
 		Code:     e.Code,
-		ErrorMsg: e.Error(),
+		ErrorMsg: e.Message,
 	})
 }

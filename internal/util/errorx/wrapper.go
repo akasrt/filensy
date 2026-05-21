@@ -1,6 +1,6 @@
 package errorx
 
-func NewUnprocessableEntityError(err error) *Error {
+func WrapUnprocessableEntityError(err error) *Error {
 	return &Error{
 		Code:    422,
 		Message: "unprocessable entity",
@@ -8,7 +8,7 @@ func NewUnprocessableEntityError(err error) *Error {
 	}
 }
 
-func NewConflictError(err error) *Error {
+func WrapConflictError(err error) *Error {
 	return &Error{
 		Code:    409,
 		Message: "conflict",
@@ -16,7 +16,7 @@ func NewConflictError(err error) *Error {
 	}
 }
 
-func NewInternalServerError(err error) *Error {
+func WrapInternalServerError(err error) *Error {
 	return &Error{
 		Code:    500,
 		Message: "internal server error",
@@ -24,11 +24,17 @@ func NewInternalServerError(err error) *Error {
 	}
 }
 
-func NewUnauthorizedError(err error) *Error {
+func WrapUnauthorizedError(err error) *Error {
 	return &Error{
 		Code:    401,
 		Message: "unauthorized",
 		Err:     err,
+	}
+}
+
+func WrapMysqlError(err error) *Error {
+	return &Error{
+		Err: err,
 	}
 }
 
