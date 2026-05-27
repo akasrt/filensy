@@ -10,6 +10,7 @@ type Error struct {
 	Code    int
 	Message string
 	Err     error
+	ErrCode *string
 }
 
 func (e *Error) Error() string {
@@ -18,7 +19,6 @@ func (e *Error) Error() string {
 	} else {
 		return fmt.Sprint(e.Message)
 	}
-
 }
 
 func (e *Error) Unwrap() error {
@@ -42,7 +42,7 @@ func Wrap(err error, code int, message string) *Error {
 
 func (e *Error) Response(message string) httputil.Response {
 	return httputil.NewErrorResponse(message, &httputil.Error{
-		Code:     e.Code,
+		Code:     e.ErrCode,
 		ErrorMsg: e.Message,
 	})
 }

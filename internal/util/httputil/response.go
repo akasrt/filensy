@@ -7,8 +7,8 @@ type Response struct {
 }
 
 type Error struct {
-	Code     int    `json:"code,omitempty"`
-	ErrorMsg string `json:"error_message,omitempty"`
+	Code     *string `json:"code,omitempty"`
+	ErrorMsg string  `json:"error_message,omitempty"`
 }
 
 func NewResponse(message string, data any) Response {

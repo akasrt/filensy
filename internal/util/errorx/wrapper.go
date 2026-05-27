@@ -24,11 +24,12 @@ func WrapInternalServerError(err error) *Error {
 	}
 }
 
-func WrapUnauthorizedError(err error) *Error {
+func WrapUnauthorizedError(err error, code *string) *Error {
 	return &Error{
 		Code:    401,
 		Message: "unauthorized",
 		Err:     err,
+		ErrCode: code,
 	}
 }
 

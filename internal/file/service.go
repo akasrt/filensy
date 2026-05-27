@@ -45,7 +45,8 @@ func (s *service) GetMetaData(code, token string) (RSFileData, error) {
 	if fileData.Visibility == visibilityPrivate {
 		isValidToken := cryptox.VerifyToken(token, fileData.Token)
 		if !isValidToken {
-			return RSFileData{}, errorx.WrapUnauthorizedError(nil)
+			errCode := errorx.ErrInvalidFileToken
+			return RSFileData{}, errorx.WrapUnauthorizedError(nil, &errCode)
 		}
 	}
 
@@ -118,7 +119,8 @@ func (s *service) Download(code, token string) (*os.File, RSFileData, error) {
 	if fileData.Visibility == visibilityPrivate {
 		isValidToken := cryptox.VerifyToken(token, fileData.Token)
 		if !isValidToken {
-			return nil, RSFileData{}, errorx.WrapUnauthorizedError(nil)
+			errCode := errorx.ErrInvalidFileToken
+			return nil, RSFileData{}, errorx.WrapUnauthorizedError(nil, &errCode)
 		}
 	}
 
@@ -138,7 +140,8 @@ func (s *service) Delete(code, token string) error {
 
 	isValidToken := cryptox.VerifyToken(token, fileData.Token)
 	if !isValidToken {
-		return errorx.WrapUnauthorizedError(nil)
+		errCode := errorx.ErrInvalidFileToken
+		return errorx.WrapUnauthorizedError(nil, &errCode)
 	}
 
 	err = s.storage.Delete(code)

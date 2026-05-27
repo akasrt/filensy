@@ -52,6 +52,8 @@ func handleMysqlError(err *Error) {
 	if errors.Is(err.Err, sql.ErrNoRows) {
 		err.Code = http.StatusNotFound
 		err.Message = "request resource was not found"
+		errCode := ErrFileNotFound
+		err.ErrCode = &errCode
 	}
 
 	var mysqlErr *mysql.MySQLError

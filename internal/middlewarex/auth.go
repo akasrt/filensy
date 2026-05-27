@@ -1,10 +1,10 @@
 package middlewarex
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/akasrt/filensy/internal/config/env"
+	"github.com/akasrt/filensy/internal/util/errorx"
 	"github.com/labstack/echo/v5"
 )
 
@@ -18,19 +18,22 @@ func AuthMiddleware() echo.MiddlewareFunc {
 
 			authHeader := c.Request().Header.Get("Authorization")
 			if authHeader == "" {
-				return echo.NewHTTPError(http.StatusUnauthorized, "missing authorization header")
+				errCode := errorx.ErrMissingAuthToken
+				return errorx.WrapUnauthorizedError(nil, &errCode)
 			}
 
 			const prefix = "Bearer "
 
 			if !strings.HasPrefix(authHeader, prefix) {
-				return echo.NewHTTPError(http.StatusUnauthorized, "authentication failed")
+				errCode := errorx.ErrInvalidAuthToken
+				return errorx.WrapUnauthorizedError(nil, &errCode)
 			}
 
 			token := strings.TrimSpace(strings.TrimPrefix(authHeader, prefix))
 
 			if token != authKey {
-				return echo.NewHTTPError(http.StatusUnauthorized, "authentication failed")
+				errCode := errorx.ErrInvalidAuthToken
+				return errorx.WrapUnauthorizedError(nil, &errCode)
 			}
 
 			return next(c)
