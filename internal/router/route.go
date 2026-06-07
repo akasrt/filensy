@@ -8,10 +8,11 @@ import (
 
 func AddRoutes(e *echo.Echo) {
 	e.Use(middlewarex.AuthMiddleware())
+	apiGrp := e.Group("/api/v1")
 
 	fileHandler := file.NewHandler()
 	// file apis
-	fileGrp := e.Group("/file")
+	fileGrp := apiGrp.Group("/file")
 	fileGrp.GET("/:code/meta", fileHandler.GetMetaData)
 	fileGrp.GET("/:code", fileHandler.Download)
 	fileGrp.POST("/", fileHandler.Upload)

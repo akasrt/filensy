@@ -114,7 +114,7 @@ func (h *handler) Delete(c *echo.Context) error {
 		return err
 	}
 
-	return c.NoContent(http.StatusOK)
+	return c.NoContent(http.StatusNoContent)
 }
 
 func parseRequest(c *echo.Context) (string, string, error) {
