@@ -16,7 +16,28 @@ var (
 
 // CLIErrorHandler centralized error handler for cli
 func CLIErrorHandler(err error) (exit int, message string) {
-	return 0, "success"
+	if err == nil {
+		return 0, "success"
+	}
+
+	if errors.Is(err, ErrLocalCreationFailed) || errors.Is(err, ErrLocalDeletionFailed) {
+		return 0, fmt.Sprintf("Warning: %v", err)
+	}
+
+	if errors.Is(err, ErrFileNotExists) {
+		return 1, "Error: The specified file does not exist."
+	}
+
+	if errors.Is(err, ErrPasswordMissing) {
+		return 1, "Error: A password is required for this encrypted file."
+	}
+
+	var serverErr *ServerError
+	if errors.As(err, &serverErr) {
+		return 1, fmt.Sprintf("Server Error [%d]: %s", serverErr.Status, serverErr.Resp.Message)
+	}
+
+	return 1, fmt.Sprintf("An unexpected error occurred: %v", err)
 }
 
 func WrapServerError(status int, resp httputil.Response) error {

@@ -106,6 +106,7 @@ func (f *fileService) UploadFile(path string, opts FileOptions) (RSFileData, err
 		Code:     fileData.Code,
 		Token:    *fileData.Token,
 		Password: opts.Password,
+		Name:     fileData.Name,
 	}
 	err = f.localStore.Create(local)
 	if err != nil {

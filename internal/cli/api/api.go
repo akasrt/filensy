@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/akasrt/filensy/internal/config/userconfig"
 	"github.com/akasrt/filensy/internal/util/httputil"
 )
 
@@ -25,6 +26,7 @@ func PostFile(name, ttl, visibility string, isEncrypted bool, file io.Reader) (i
 		return 0, apiResp, err
 	}
 
+	setAuthHeader(req)
 	req.Header.Set("Content-Type", "application/octet-stream")
 
 	q := req.URL.Query()
@@ -59,7 +61,7 @@ func GetFile(code string, token *string) (int, httputil.Response, io.ReadCloser,
 	if err != nil {
 		return 0, httputil.Response{}, nil, nil, err
 	}
-
+	setAuthHeader(req)
 	if token != nil {
 		req.Header.Set("X-File-Token", *token)
 	}
@@ -96,7 +98,7 @@ func GetFileMetadata(code string, token *string) (int, httputil.Response, error)
 	if err != nil {
 		return 0, apiResp, err
 	}
-
+	setAuthHeader(req)
 	if token != nil {
 		req.Header.Set("X-File-Token", *token)
 	}
@@ -120,7 +122,7 @@ func DeleteFile(code string, token string) (int, httputil.Response, error) {
 	if err != nil {
 		return 0, httputil.Response{}, err
 	}
-
+	setAuthHeader(req)
 	req.Header.Set("X-File-Token", token)
 
 	resp, err := client.Do(req)
@@ -140,4 +142,12 @@ func DeleteFile(code string, token string) (int, httputil.Response, error) {
 	}
 
 	return resp.StatusCode, httputil.Response{}, nil
+}
+
+func setAuthHeader(req *http.Request) {
+	conf := userconfig.GetConfig()
+	if conf.AuthKey != "" {
+		authToken := fmt.Sprintf("Bearer %s", conf.AuthKey)
+		req.Header.Set("Authorization", authToken)
+	}
 }

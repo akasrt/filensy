@@ -82,6 +82,7 @@ func (l *store) Delete(code string) error {
 	return nil
 }
 
+// todo: implement encryption and decryption so other applications can't read the data.
 func (l *store) load() error {
 	data, err := os.ReadFile(l.filePath)
 	if err != nil {
