@@ -22,8 +22,8 @@ const (
 
 type FileService interface {
 	UploadFile(path string, opts FileOptions) (RSFileData, error)
-	GetFile(path string, code string, token, password *string) error
-	FindFile(code string, token *string) (RSFileData, error)
+	GetFile(path, code, token, password string) error
+	FindFile(code, token string) (RSFileData, error)
 	DeleteFile(code, token string) error
 }
 
@@ -116,8 +116,19 @@ func (f *fileService) UploadFile(path string, opts FileOptions) (RSFileData, err
 	return fileData, nil
 }
 
-func (f *fileService) GetFile(path string, code string, token, password *string) error {
-	f.setFromLocal(code, token, password)
+func (f *fileService) GetFile(path, code, token, password string) error {
+	if token == "" || password == "" {
+		localData, exists := f.localStore.Get(code)
+		if exists {
+			if localData.Token != "" && token == "" {
+				token = localData.Token
+			}
+			if localData.Password != "" && password == "" {
+				password = localData.Password
+			}
+		}
+	}
+
 	status, resp, reader, headers, err := api.GetFile(code, token)
 	if err != nil {
 		return err
@@ -132,13 +143,13 @@ func (f *fileService) GetFile(path string, code string, token, password *string)
 	fileData := parseFileHeader(headers)
 
 	if fileData.Is_Encrypted {
-		if password == nil || *password == "" {
+		if password == "" {
 			return errorx.ErrPasswordMissing
 		}
 
 		pr, pw := io.Pipe()
 		go func() {
-			err := cryptox.Decrypt(reader, pw, *password)
+			err := cryptox.Decrypt(reader, pw, password)
 			if err != nil {
 				pw.CloseWithError(err)
 				return
@@ -156,8 +167,13 @@ func (f *fileService) GetFile(path string, code string, token, password *string)
 	return nil
 }
 
-func (f *fileService) FindFile(code string, token *string) (RSFileData, error) {
-	f.setFromLocal(code, token, nil)
+func (f *fileService) FindFile(code string, token string) (RSFileData, error) {
+	if token == "" {
+		localData, exists := f.localStore.Get(code)
+		if exists {
+			token = localData.Token
+		}
+	}
 	status, resp, err := api.GetFileMetadata(code, token)
 	if err != nil {
 		return RSFileData{}, err
@@ -175,6 +191,12 @@ func (f *fileService) FindFile(code string, token *string) (RSFileData, error) {
 }
 
 func (f *fileService) DeleteFile(code, token string) error {
+	if token == "" {
+		localData, exists := f.localStore.Get(code)
+		if exists {
+			token = localData.Token
+		}
+	}
 	status, resp, err := api.DeleteFile(code, token)
 	if err != nil {
 		return err
@@ -233,20 +255,5 @@ func parseFileHeader(headers map[string]string) RSFileData {
 	return RSFileData{
 		Name:         fileName,
 		Is_Encrypted: isEncrypted,
-	}
-}
-
-func (f *fileService) setFromLocal(code string, token, password *string) {
-	if token == nil || password == nil {
-		localData, exists := f.localStore.Get(code)
-		if exists {
-			if localData.Token != "" && token == nil {
-				token = &localData.Token
-			}
-
-			if localData.Password != "" && password == nil {
-				password = &localData.Password
-			}
-		}
 	}
 }

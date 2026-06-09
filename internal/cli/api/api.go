@@ -55,15 +55,15 @@ func PostFile(name, ttl, visibility string, isEncrypted bool, file io.Reader) (i
 	return resp.StatusCode, apiResp, nil
 }
 
-func GetFile(code string, token *string) (int, httputil.Response, io.ReadCloser, map[string]string, error) {
+func GetFile(code, token string) (int, httputil.Response, io.ReadCloser, map[string]string, error) {
 	url := fmt.Sprintf("%s/%s", fileURL, code)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return 0, httputil.Response{}, nil, nil, err
 	}
 	setAuthHeader(req)
-	if token != nil {
-		req.Header.Set("X-File-Token", *token)
+	if token != "" {
+		req.Header.Set("X-File-Token", token)
 	}
 
 	resp, err := client.Do(req)
@@ -90,7 +90,7 @@ func GetFile(code string, token *string) (int, httputil.Response, io.ReadCloser,
 	return resp.StatusCode, httputil.Response{}, resp.Body, headers, nil
 }
 
-func GetFileMetadata(code string, token *string) (int, httputil.Response, error) {
+func GetFileMetadata(code, token string) (int, httputil.Response, error) {
 	var apiResp httputil.Response
 
 	url := fmt.Sprintf("%s/%s/meta", fileURL, code)
@@ -99,8 +99,8 @@ func GetFileMetadata(code string, token *string) (int, httputil.Response, error)
 		return 0, apiResp, err
 	}
 	setAuthHeader(req)
-	if token != nil {
-		req.Header.Set("X-File-Token", *token)
+	if token != "" {
+		req.Header.Set("X-File-Token", token)
 	}
 
 	resp, err := client.Do(req)
