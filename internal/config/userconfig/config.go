@@ -50,12 +50,13 @@ func Load() error {
 	mu.Lock()
 	defer mu.Unlock()
 	data, err := os.ReadFile(cfgPath)
-	if errors.Is(err, os.ErrNotExist) {
-		cfg = Config{}
-	} else {
-		return err
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			cfg = Config{}
+		} else {
+			return err
+		}
 	}
-
 	err = json.Unmarshal(data, &cfg)
 	if err != nil {
 		return err
@@ -73,7 +74,7 @@ func SetConfig(conf Config) error {
 	defer mu.Unlock()
 
 	cfg = conf
-	err := Save()
+	err := saveLocked()
 	if err != nil {
 		return err
 	}
@@ -81,10 +82,7 @@ func SetConfig(conf Config) error {
 	return nil
 }
 
-func Save() error {
-	mu.Lock()
-	defer mu.Unlock()
-
+func saveLocked() error {
 	data, err := json.MarshalIndent(cfg, "", "  ")
 	if err != nil {
 		return err

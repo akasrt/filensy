@@ -33,6 +33,7 @@ type RSFileData struct {
 	Name         string    `json:"name"`
 	Size         uint64    `json:"size"`
 	Is_Encrypted bool      `json:"is_encrypted"`
+	Visibility   string    `json:"visibility"`
 	CreatedAt    time.Time `json:"created_at"`
 	ExpiresAt    time.Time `json:"expires_at"`
 }
@@ -45,6 +46,7 @@ func (fd FileData) MapToResponse(token *string) RSFileData {
 		Name:         fd.Name,
 		Size:         fd.Size,
 		Is_Encrypted: fd.Is_Encrypted,
+		Visibility:   fd.Visibility,
 		CreatedAt:    fd.CreatedAt,
 		ExpiresAt:    fd.ExpiresAt,
 	}

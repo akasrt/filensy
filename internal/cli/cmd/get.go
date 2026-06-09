@@ -3,13 +3,14 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/akasrt/filensy/internal/cli/file"
 	"github.com/spf13/cobra"
 )
 
 var (
 	getOutputDir string
 	getPassword  string
-	getFileToken string
+	fileToken    string
 )
 
 var getCmd = &cobra.Command{
@@ -25,6 +26,18 @@ var getCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		fileCode := args[0]
+
+		fileService, err := file.NewFileService()
+		if err != nil {
+			return err
+		}
+
+		err = fileService.GetFile(getOutputDir, fileCode, fileToken, getPassword)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	},
 }
@@ -34,5 +47,5 @@ func init() {
 
 	getCmd.Flags().StringVarP(&getOutputDir, "dir", "d", "", "Directory to store the file")
 	getCmd.Flags().StringVarP(&getPassword, "password", "p", "", "Password to decrypt file")
-	getCmd.Flags().StringVarP(&getFileToken, "token", "t", "", "File token for private file")
+	getCmd.Flags().StringVarP(&fileToken, "token", "t", "", "File token for private file")
 }

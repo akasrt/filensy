@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/akasrt/filensy/internal/cli/file"
 	"github.com/spf13/cobra"
 )
 
@@ -19,6 +20,18 @@ var deleteCmd = &cobra.Command{
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		fileCode := args[0]
+
+		fileService, err := file.NewFileService()
+		if err != nil {
+			return err
+		}
+
+		err = fileService.DeleteFile(fileCode, fileToken)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	},
 }
@@ -26,5 +39,5 @@ var deleteCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(deleteCmd)
 
-	deleteCmd.Flags().StringVarP(&getFileToken, "token", "t", "", "File token")
+	deleteCmd.Flags().StringVarP(&fileToken, "token", "t", "", "File token")
 }

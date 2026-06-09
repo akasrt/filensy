@@ -22,7 +22,7 @@ const (
 
 type FileService interface {
 	UploadFile(path string, opts FileOptions) (RSFileData, error)
-	GetFile(path, code, token, password string) error
+	GetFile(dir, code, token, password string) error
 	FindFile(code, token string) (RSFileData, error)
 	DeleteFile(code, token string) error
 }
@@ -116,7 +116,7 @@ func (f *fileService) UploadFile(path string, opts FileOptions) (RSFileData, err
 	return fileData, nil
 }
 
-func (f *fileService) GetFile(path, code, token, password string) error {
+func (f *fileService) GetFile(dir, code, token, password string) error {
 	if token == "" || password == "" {
 		localData, exists := f.localStore.Get(code)
 		if exists {
@@ -159,7 +159,15 @@ func (f *fileService) GetFile(path, code, token, password string) error {
 		reader = pr
 	}
 
-	err = SaveFile(reader, path, fileData.Name)
+	if dir == "" {
+		defaultDir := userconfig.GetConfig().Directory
+		if defaultDir != "" {
+			dir = defaultDir
+		} else {
+			dir = "."
+		}
+	}
+	err = SaveFile(reader, dir, fileData.Name)
 	if err != nil {
 		return err
 	}

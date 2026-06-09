@@ -12,6 +12,7 @@ var (
 	ErrPasswordMissing     error = errors.New("password is needed for encrypted files")
 	ErrLocalDeletionFailed error = errors.New("unable to delete local file data")
 	ErrLocalCreationFailed error = errors.New("unable to create local file data")
+	ErrInvalidConfigKey    error = errors.New("invalid config key")
 )
 
 // CLIErrorHandler centralized error handler for cli
@@ -30,6 +31,10 @@ func CLIErrorHandler(err error) (exit int, message string) {
 
 	if errors.Is(err, ErrPasswordMissing) {
 		return 1, "Error: A password is required for this encrypted file."
+	}
+
+	if errors.Is(err, ErrInvalidConfigKey) {
+		return 1, "Invalid config key! Supported keys are: 'auth', 'dir'"
 	}
 
 	var serverErr *ServerError
