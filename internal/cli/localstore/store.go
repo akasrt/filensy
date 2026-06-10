@@ -94,6 +94,11 @@ func (l *store) load() error {
 		}
 	}
 
+	if string(data) == "" {
+		l.files = map[string]FileData{}
+		return nil
+	}
+
 	err = json.Unmarshal(data, &l.files)
 	if err != nil {
 		return err

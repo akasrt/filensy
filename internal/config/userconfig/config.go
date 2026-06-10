@@ -53,10 +53,17 @@ func Load() error {
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			cfg = Config{}
+			return nil
 		} else {
 			return err
 		}
 	}
+
+	if string(data) == "" {
+		cfg = Config{}
+		return nil
+	}
+
 	err = json.Unmarshal(data, &cfg)
 	if err != nil {
 		return err

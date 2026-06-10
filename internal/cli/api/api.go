@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	host    = "http://127.0.0.1"
+	host    = "http://127.0.0.1:8080"
 	fileURL = host + "/api/v1" + "/file"
 )
 
