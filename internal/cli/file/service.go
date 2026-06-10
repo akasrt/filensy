@@ -157,6 +157,7 @@ func (f *fileService) GetFile(dir, code, token, password string) error {
 			dir = "."
 		}
 	}
+
 	err = SaveFile(reader, dir, fileData.Name)
 	if err != nil {
 		return err
