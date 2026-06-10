@@ -1,6 +1,7 @@
 package file
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -67,19 +68,12 @@ func (f *fileService) UploadFile(path string, opts FileOptions) (RSFileData, err
 
 	var payloadReader io.Reader = file
 	if opts.IsEncrypted {
-		pr, pw := io.Pipe()
-
-		go func() {
-			err = cryptox.Encrypt(payloadReader, pw, opts.Password)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-
-			pw.Close()
-		}()
-
-		payloadReader = pr
+		var buf bytes.Buffer
+		err = cryptox.Encrypt(file, &buf, opts.Password)
+		if err != nil {
+			return RSFileData{}, err
+		}
+		payloadReader = &buf
 	}
 
 	var visibility string
@@ -147,16 +141,12 @@ func (f *fileService) GetFile(dir, code, token, password string) error {
 			return errorx.ErrPasswordMissing
 		}
 
-		pr, pw := io.Pipe()
-		go func() {
-			err := cryptox.Decrypt(reader, pw, password)
-			if err != nil {
-				pw.CloseWithError(err)
-				return
-			}
-			pw.Close()
-		}()
-		reader = pr
+		var buf bytes.Buffer
+		err := cryptox.Decrypt(reader, &buf, password)
+		if err != nil {
+			return err
+		}
+		reader = io.NopCloser(&buf)
 	}
 
 	if dir == "" {

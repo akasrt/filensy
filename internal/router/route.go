@@ -15,6 +15,6 @@ func AddRoutes(e *echo.Echo) {
 	fileGrp := apiGrp.Group("/file")
 	fileGrp.GET("/:code/meta", fileHandler.GetMetaData)
 	fileGrp.GET("/:code", fileHandler.Download)
-	fileGrp.POST("/", fileHandler.Upload)
+	fileGrp.POST("", fileHandler.Upload)
 	fileGrp.DELETE("/:code", fileHandler.Delete)
 }

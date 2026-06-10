@@ -45,7 +45,8 @@ var uploadCmd = &cobra.Command{
 		}
 
 		fmt.Println("Upload Complete")
-		fmt.Println("File Access Token: ", fileData.Token)
+		fmt.Println("File Code: ", fileData.Code)
+		fmt.Println("File Access Token: ", *fileData.Token)
 		return nil
 	},
 }
