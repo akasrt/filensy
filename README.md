@@ -53,7 +53,7 @@ Simply Using
 ```bash
 filensy get ABC123
 ```
-will work.
+will work. This works for other commands "find" and "delete" too.
 
 ---
 ### Find
@@ -97,6 +97,7 @@ filensy config <key> <value>
 Available configuration keys are:
 
 "auth": This needs to be configured in case server auth is enabled. It attaches the "authorization" header for every request.
+
 "dir": This is used to configure the default directory where files would be downloaded.
 #### Example
 ```bash
