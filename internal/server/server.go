@@ -37,12 +37,13 @@ func Start() {
 		Address:         address,
 		GracefulTimeout: 10 * time.Second,
 		HideBanner:      true,
-		OnShutdownError: cleanUp,
 	}
 
 	if err := sc.Start(ctx, e); err != nil {
 		e.Logger.Error("failed to start server", "error", err)
 	}
+
+	cleanUp()
 }
 
 func initDependencies() {
@@ -53,6 +54,6 @@ func initDependencies() {
 	file.RunCleaner()
 }
 
-func cleanUp(err error) {
+func cleanUp() {
 	database.Close()
 }
