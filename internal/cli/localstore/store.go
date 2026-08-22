@@ -1,6 +1,7 @@
 package localstore
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,11 +9,13 @@ import (
 	"path/filepath"
 	"sync"
 
+	"github.com/akasrt/filensy/internal/cli/keyring"
+	"github.com/akasrt/filensy/internal/cryptox"
 	"github.com/akasrt/filensy/internal/util/errorx"
 )
 
 const (
-	fileName = "local.json"
+	fileName = "local-store"
 	appName  = "filensy"
 )
 
@@ -25,6 +28,7 @@ type Store interface {
 type store struct {
 	filePath string
 	mu       sync.RWMutex
+	password string
 	files    map[string]FileData
 }
 
@@ -51,6 +55,11 @@ func (l *store) Create(data FileData) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	l.files[data.Code] = data
+
+	if !l.isActive() {
+		return errorx.ErrInactiveLocalStore
+	}
+
 	err := l.saveLocked()
 	if err != nil {
 		return fmt.Errorf("%w: %w", errorx.ErrLocalCreationFailed, err)
@@ -74,6 +83,11 @@ func (l *store) Delete(code string) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	delete(l.files, code)
+
+	if !l.isActive() {
+		return errorx.ErrInactiveLocalStore
+	}
+
 	err := l.saveLocked()
 	if err != nil {
 		return fmt.Errorf("%w: %w", errorx.ErrLocalDeletionFailed, err)
@@ -82,9 +96,23 @@ func (l *store) Delete(code string) error {
 	return nil
 }
 
-// todo: implement encryption and decryption so other applications can't read the data.
 func (l *store) load() error {
-	data, err := os.ReadFile(l.filePath)
+	password, err := keyring.GetLocalPassword()
+	if err != nil || password == "" {
+		l.files = map[string]FileData{}
+
+		newPassword, err := keyring.GenerateAndSetPassword()
+		if err != nil {
+			fmt.Print(err)
+			return fmt.Errorf("error creating local-store password")
+		}
+
+		l.password = newPassword
+		return nil
+	}
+	l.password = password
+
+	fileData, err := os.ReadFile(l.filePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			l.files = map[string]FileData{}
@@ -94,12 +122,20 @@ func (l *store) load() error {
 		}
 	}
 
-	if string(data) == "" {
+	if len(fileData) == 0 {
 		l.files = map[string]FileData{}
 		return nil
 	}
 
-	err = json.Unmarshal(data, &l.files)
+	var decryptedBuf bytes.Buffer
+	err = cryptox.Decrypt(bytes.NewReader(fileData), &decryptedBuf, l.password)
+	if err != nil {
+		os.Rename(l.filePath, l.filePath+".bak")
+		l.files = map[string]FileData{}
+		return nil
+	}
+
+	err = json.Unmarshal(decryptedBuf.Bytes(), &l.files)
 	if err != nil {
 		return err
 	}
@@ -108,17 +144,31 @@ func (l *store) load() error {
 }
 
 func (l *store) saveLocked() error {
+	if !l.isActive() {
+		return errorx.ErrInactiveLocalStore
+	}
+
 	data, err := json.MarshalIndent(l.files, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile(l.filePath, data, 0600)
+	var encryptedBuf bytes.Buffer
+	err = cryptox.Encrypt(bytes.NewReader(data), &encryptedBuf, l.password)
+	if err != nil {
+		return fmt.Errorf("failed to encrypt data: %w", err)
+	}
+
+	err = os.WriteFile(l.filePath, encryptedBuf.Bytes(), 0600)
 	if err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (l *store) isActive() bool {
+	return l.password != ""
 }
 
 func getFilePath() (string, error) {

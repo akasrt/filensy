@@ -1,10 +1,13 @@
 package cryptox
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"encoding/base64"
 	"io"
+	"strings"
 
 	"golang.org/x/crypto/argon2"
 )
@@ -113,4 +116,37 @@ func generateSalt(size int) ([]byte, error) {
 		return nil, err
 	}
 	return salt, nil
+}
+
+func EncryptValue(plaintext string, password string) (string, error) {
+	if plaintext == "" {
+		return "", nil
+	}
+
+	var buf bytes.Buffer
+	err := Encrypt(strings.NewReader(plaintext), &buf, password)
+	if err != nil {
+		return "", err
+	}
+
+	return base64.StdEncoding.EncodeToString(buf.Bytes()), nil
+}
+
+func DecryptValue(ciphertextBase64 string, password string) (string, error) {
+	if ciphertextBase64 == "" {
+		return "", nil
+	}
+
+	rawCiphertext, err := base64.StdEncoding.DecodeString(ciphertextBase64)
+	if err != nil {
+		return "", err
+	}
+
+	var buf bytes.Buffer
+	err = Decrypt(bytes.NewReader(rawCiphertext), &buf, password)
+	if err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }

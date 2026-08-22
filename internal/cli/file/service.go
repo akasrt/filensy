@@ -3,6 +3,7 @@ package file
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -104,7 +105,7 @@ func (f *fileService) UploadFile(path string, opts FileOptions) (RSFileData, err
 	}
 	err = f.localStore.Create(local)
 	if err != nil {
-		return RSFileData{}, err
+		fmt.Println("Warning: Failed to save the changes in local store!")
 	}
 
 	return fileData, nil
@@ -207,7 +208,7 @@ func (f *fileService) DeleteFile(code, token string) error {
 
 	err = f.localStore.Delete(code)
 	if err != nil {
-		return err
+		fmt.Println("Warning: Failed to save the changes in local store!")
 	}
 	return nil
 }

@@ -89,6 +89,12 @@ Delete also takes the same flags, "password" and "token". It deletes the file pe
 filensy delete ABC123 -p "secret" -t "access_token"
 ```
 ---
+### Local Password
+The "local-password" can be used to get the current local store password for the application. This password is used for encryption of local file and config data. Saving this password can be useful in case of restoring the file data from the backups.
+```bash
+filensy local-password
+```
+---
 ### Config
 The config command is used to configure global cli options. It takes a config key and the config value.
 ```bash

@@ -3,9 +3,13 @@ package userconfig
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/akasrt/filensy/internal/cli/keyring"
+	"github.com/akasrt/filensy/internal/cryptox"
 )
 
 const (
@@ -69,6 +73,20 @@ func Load() error {
 		return err
 	}
 
+	localPassword, err := keyring.GetLocalPassword()
+	if err != nil {
+		cfg.AuthKey = ""
+	}
+
+	if cfg.AuthKey != "" {
+		decryptedKey, err := cryptox.DecryptValue(cfg.AuthKey, localPassword)
+		if err != nil {
+			cfg.AuthKey = ""
+			return fmt.Errorf("failed to decrypt auth key: %w", err)
+		}
+		cfg.AuthKey = decryptedKey
+	}
+
 	return nil
 }
 
@@ -90,7 +108,23 @@ func SetConfig(conf Config) error {
 }
 
 func saveLocked() error {
-	data, err := json.MarshalIndent(cfg, "", "  ")
+	diskCfg := cfg
+
+	if diskCfg.AuthKey != "" {
+		localPassword, err := keyring.GetLocalPassword()
+		if err != nil || localPassword == "" {
+			return fmt.Errorf("unable to save config as local password isn't available! Err: %w", err)
+		}
+
+		encryptedKey, err := cryptox.EncryptValue(diskCfg.AuthKey, localPassword)
+		if err != nil {
+			return fmt.Errorf("failed to encrypt auth key! Err: %w", err)
+		}
+
+		diskCfg.AuthKey = encryptedKey
+	}
+
+	data, err := json.MarshalIndent(diskCfg, "", "  ")
 	if err != nil {
 		return err
 	}

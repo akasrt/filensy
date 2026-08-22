@@ -13,6 +13,7 @@ var (
 	ErrLocalDeletionFailed error = errors.New("unable to delete local file data")
 	ErrLocalCreationFailed error = errors.New("unable to create local file data")
 	ErrInvalidConfigKey    error = errors.New("invalid config key")
+	ErrInactiveLocalStore  error = errors.New("local store is inactive")
 )
 
 // CLIErrorHandler centralized error handler for cli
